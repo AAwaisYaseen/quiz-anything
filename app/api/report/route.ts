@@ -9,11 +9,15 @@ export async function POST(req: Request) {
   if (typeof id !== "string" || !UUID.test(id)) return fail("BAD_REQUEST", 400);
 
   const supabase = db();
-  const { data: ok } = await supabase.rpc("try_rate_limit", {
+  const { data: ok, error: rlError } = await supabase.rpc("try_rate_limit", {
     p_key: `report:${clientIp(req)}`,
     p_max: 30,
     p_window_seconds: 3600,
   });
+  if (rlError) {
+    console.error("rate limit check failed:", rlError.message);
+    return fail("SERVER_ERROR", 500);
+  }
   if (!ok) return fail("RATE_LIMITED", 429);
 
   const { error } = await supabase.rpc("report_question", { p_id: id });

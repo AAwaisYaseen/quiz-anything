@@ -123,7 +123,8 @@ export async function generateQuestions(opts: {
   }
 
   const data = (await res.json().catch(() => null)) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: { finishReason?: string; content?: { parts?: { text?: string }[] } }[];
+    promptFeedback?: { blockReason?: string };
   } | null;
   const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
 
@@ -131,7 +132,13 @@ export async function generateQuestions(opts: {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw new GeminiError("FAILED", "Gemini returned invalid JSON");
+    // Metadata only, never the body.
+    const finish = data?.candidates?.[0]?.finishReason ?? "none";
+    const block = data?.promptFeedback?.blockReason ?? "none";
+    throw new GeminiError(
+      "FAILED",
+      `Gemini returned invalid JSON (text length ${text.length}, finishReason ${finish}, blockReason ${block})`,
+    );
   }
   if (!Array.isArray(raw)) throw new GeminiError("FAILED", "Gemini did not return an array");
 
@@ -148,5 +155,6 @@ export async function generateQuestions(opts: {
     seen.add(hash);
     out.push({ question: q, options, answer_index: answer, explanation: why, hash });
   }
+  if (out.length < raw.length) console.warn(`Gemini batch: kept ${out.length}/${raw.length}`);
   return out;
 }

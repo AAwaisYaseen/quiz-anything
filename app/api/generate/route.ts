@@ -65,6 +65,8 @@ export async function POST(req: Request) {
       apiKey,
     });
   } catch (e) {
+    // GeminiError messages never include the key or the response body.
+    console.error("generate failed:", e instanceof Error ? e.message : "unknown error");
     if (e instanceof GeminiError) {
       if (e.kind === "BAD_KEY") return ownKey ? fail("BAD_KEY", 400) : fail("GEN_FAILED", 502);
       if (e.kind === "QUOTA") return ownKey ? fail("OWN_KEY_QUOTA", 429) : fail("NEEDS_OWN_KEY", 429);
