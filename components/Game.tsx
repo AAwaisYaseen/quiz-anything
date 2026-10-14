@@ -106,6 +106,14 @@ export default function Game() {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const genRunning = useRef(false);
+  const errRef = useRef<HTMLDivElement>(null);
+
+  // On a phone the error sits below the fold, so bring it into view.
+  useEffect(() => {
+    if (screen !== "home" || !homeError) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    errRef.current?.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  }, [screen, homeError]);
 
   const backgroundGenerate = useCallback((t: string, d: Difficulty) => {
     if (genRunning.current) return;
@@ -298,7 +306,7 @@ export default function Game() {
           </form>
 
           {homeError && (
-            <div className="err" role="alert">
+            <div className="err" role="alert" ref={errRef}>
               <p>{homeError.text}</p>
               {homeError.actions?.length ? (
                 <div className="err-actions">
