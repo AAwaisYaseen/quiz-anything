@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { Difficulty } from "@/lib/shared";
 
-const DEFAULT_MODEL = "gemini-2.5-flash-lite";
+const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 
 export class GeminiError extends Error {
   constructor(public kind: "BAD_KEY" | "QUOTA" | "FAILED", message: string) {

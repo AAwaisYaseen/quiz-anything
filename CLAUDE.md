@@ -99,7 +99,7 @@ supabase/migrations/        001_init.sql: tables + SQL functions
 
 ## Env vars (see `.env.example`)
 
-`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY` (optional), `GEMINI_MODEL` (default `gemini-2.5-flash-lite`), `DAILY_CAP` (default 30), `RATE_LIMIT_PER_HOUR` (default 10).
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY` (optional), `GEMINI_MODEL` (default `gemini-3.5-flash-lite`), `DAILY_CAP` (default 30), `RATE_LIMIT_PER_HOUR` (default 10).
 
 ## Status
 

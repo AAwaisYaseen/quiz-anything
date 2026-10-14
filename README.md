@@ -25,7 +25,7 @@ Questions are written by Gemini and saved to a shared Supabase bank, so each one
    | `SUPABASE_URL` | Project URL (Project settings > API) |
    | `SUPABASE_SERVICE_ROLE_KEY` | Service role key. Server only, full DB access. |
    | `GEMINI_API_KEY` | Your key. Leave empty to require players' own keys. |
-   | `GEMINI_MODEL` | Default `gemini-2.5-flash-lite`. Any free-tier Flash/Flash-Lite model works. |
+   | `GEMINI_MODEL` | Default `gemini-3.5-flash-lite`. Any free-tier Flash/Flash-Lite model works. |
    | `DAILY_CAP` | Batches per UTC day on your key. Default 30. |
    | `RATE_LIMIT_PER_HOUR` | Generate requests per IP per hour. Default 10. |
 
