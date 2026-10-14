@@ -92,6 +92,7 @@ export default function Game() {
   const [custom, setCustom] = useState("");
   const [topic, setTopic] = useState("");
   const [loadMsg, setLoadMsg] = useState("");
+  const [loadWriting, setLoadWriting] = useState(false);
   const [homeError, setHomeError] = useState<HomeError | null>(null);
 
   const [round, setRound] = useState<Question[]>([]);
@@ -134,6 +135,7 @@ export default function Game() {
       setHomeError(null);
       setTopic(t);
       setLoadMsg("Finding questions");
+      setLoadWriting(false);
       setScreen("loading");
 
       let r = await fetchRound(t, d);
@@ -146,6 +148,7 @@ export default function Game() {
       let genErr: ErrorCode | null = null;
       if (r.questions.length < ROUND_SIZE) {
         setLoadMsg(r.questions.length ? "Writing a few more questions" : "Writing new questions");
+        setLoadWriting(true);
         genErr = await generate(t, d);
         if (!genErr) r = (await fetchRound(t, d)) ?? r;
       }
@@ -328,13 +331,11 @@ export default function Game() {
       )}
 
       {screen === "loading" && (
-        <section className="loading" aria-live="polite">
-          <div className="dots" aria-hidden>
-            <i />
-            <i />
-            <i />
-          </div>
-          <p>{loadMsg}</p>
+        <section className="loading">
+          <p className="load-msg" aria-live="polite">
+            {loadMsg}
+          </p>
+          <LoadingBar writing={loadWriting} />
         </section>
       )}
 
@@ -431,6 +432,48 @@ export default function Game() {
 
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     </main>
+  );
+}
+
+const WRITING_STEPS = [
+  "Picking sub-topics",
+  "Writing questions",
+  "Adding tricky wrong answers",
+  "Checking the answers",
+  "Shuffling the options",
+];
+
+/**
+ * There's no real progress signal from the server, so the bar eases toward a target and never
+ * claims to be done early: up to 25% while searching the bank, then on toward 94% over the
+ * ~17s it takes to write a batch.
+ */
+function LoadingBar({ writing }: { writing: boolean }) {
+  const [pct, setPct] = useState(4);
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const target = writing ? 94 : 25;
+    const rate = writing ? 0.012 : 0.1; // share of the remaining gap closed every 100ms
+    const id = setInterval(() => setPct((p) => p + (target - p) * rate), 100);
+    return () => clearInterval(id);
+  }, [writing]);
+
+  useEffect(() => {
+    if (!writing) return;
+    const id = setInterval(() => setStep((s) => Math.min(s + 1, WRITING_STEPS.length - 1)), 3500);
+    return () => clearInterval(id);
+  }, [writing]);
+
+  return (
+    <>
+      <div className="bar" role="progressbar" aria-label="Loading questions">
+        <div className="bar-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="load-step" aria-hidden>
+        {writing ? `${WRITING_STEPS[step]}…` : " "}
+      </p>
+    </>
   );
 }
 

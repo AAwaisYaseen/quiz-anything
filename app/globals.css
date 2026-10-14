@@ -70,12 +70,19 @@ h2 { font-size: 1.05rem; font-weight: 600; margin: 22px 0 10px; }
 
 /* loading */
 .loading { text-align: center; padding-top: 30vh; }
-.loading p { color: var(--muted); font-weight: 600; }
-.dots { display: inline-flex; gap: 8px; margin-bottom: 16px; }
-.dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid var(--edge); animation: hop 1s infinite ease-in-out; }
-.dots i:nth-child(2) { animation-delay: 0.15s; }
-.dots i:nth-child(3) { animation-delay: 0.3s; }
-@keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-12px); } }
+.load-msg { font-size: 1.3rem; font-weight: 800; margin-bottom: 18px; }
+.load-step { color: var(--muted); font-weight: 600; margin-top: 14px; min-height: 1.4em; }
+.bar {
+  height: 26px; border-radius: 999px; overflow: hidden;
+  border: 2px solid var(--edge); background: var(--tile); box-shadow: 0 4px 0 var(--edge);
+}
+.bar-fill {
+  height: 100%; border-right: 2px solid var(--edge); background-color: var(--accent);
+  background-image: repeating-linear-gradient(-45deg, transparent 0 10px, rgba(255, 255, 255, 0.28) 10px 20px);
+  background-size: 28.28px 28.28px; animation: stripes 0.8s linear infinite;
+  transition: width 0.1s linear;
+}
+@keyframes stripes { to { background-position: 28.28px 0; } }
 
 /* play */
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; font-weight: 600; }
