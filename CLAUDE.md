@@ -12,6 +12,8 @@ It's a personal side project, open source, built for fun and to share with frien
 
 The owner is an experienced Next.js / React Native developer. Skip basics, give one clear recommendation rather than a menu of options, work in small steps, and commit after each working step.
 
+**Commits:** never add `Co-Authored-By` (or any AI attribution) trailers to commit messages or PR descriptions. The owner is the sole author.
+
 ## Stack
 
 - Next.js 16.4 App Router, React 19.3, TypeScript. **This Next.js version has breaking changes from older versions. Check `node_modules/next/dist/docs/` before using an API you're unsure of.**
