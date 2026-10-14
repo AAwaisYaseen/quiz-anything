@@ -86,6 +86,7 @@ supabase/migrations/        001_init.sql: tables + SQL functions
 - Never log request headers or anything that could contain `x-gemini-key`.
 - Never add a client-side Supabase client or ship the anon key to the browser. All DB access goes through API routes.
 - Anything under `lib/server/` must keep `import "server-only"`.
+- `npm run build` runs `scripts/check-secrets.mjs` as `postbuild`. It fails the build (locally and on Vercel) if a secret value or key pattern appears in any browser-facing file. Never weaken or skip it.
 
 ## Conventions
 
