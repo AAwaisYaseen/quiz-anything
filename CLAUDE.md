@@ -42,7 +42,8 @@ lib/client-store.ts         localStorage: seen ids per topic+difficulty, best sc
 lib/server/db.ts            Lazy service-role Supabase client
 lib/server/gemini.ts        Prompt, Gemini call, zod validation, questionHash
 lib/server/http.ts          fail(), clientIp(), readJson(), envInt()
-supabase/migrations/        001_init.sql: tables + SQL functions
+supabase/migrations/        001_init.sql: tables + SQL functions; 002_grants.sql: explicit table grants
+scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches browser files
 ```
 
 ### Flow
@@ -103,8 +104,9 @@ supabase/migrations/        001_init.sql: tables + SQL functions
 
 ## Status
 
-- Initial build is done. Build, lint and typecheck pass. The migration was tested on local Postgres: the cap, rate limit, dedupe and report-hide all work.
-- **Not yet tested against live Supabase and Gemini.** The first real run is the end-to-end test. If generation fails, check the Gemini response shape in `lib/server/gemini.ts` first.
+- Initial build is done. Build, lint and typecheck pass.
+- **Tested end-to-end against live Supabase + Gemini on 2026-10-14** (`gemini-3.5-flash-lite`): generation (~16-18s per batch of 20), dedupe/avoid list, daily cap, per-IP rate limit, bad player key, report-hide, and a full round in the UI at 375px in light and dark mode.
+- Not yet tested: a real player key end to end in the UI, and a Vercel deploy.
 - No automated tests yet.
 
 ## Known gaps
@@ -113,6 +115,8 @@ supabase/migrations/        001_init.sql: tables + SQL functions
 - The daily cap counts attempts, including failed Gemini calls.
 - Seen history is per-browser and lost if localStorage is cleared.
 - Two players starting the same new topic at the same moment can trigger two batches. Dedupe keeps the bank clean, but quota is used twice.
+- A brand-new topic uses 2 batches: the blocking one, then an immediate background refill (20 in the bank minus 10 served is below `REFILL_BELOW`).
+- `@supabase/supabase-js` warns that Node 20 is deprecated. Use Node 22+ locally and on Vercel.
 
 ## Backlog ideas
 
