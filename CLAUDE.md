@@ -35,14 +35,15 @@ npx tsc --noEmit
 ```
 app/api/questions/route.ts  POST {topic, difficulty, exclude[]} -> up to 10 unseen questions + remaining + total
 app/api/generate/route.ts   POST {topic, difficulty}, optional x-gemini-key header -> writes a batch of 20 to the bank
-app/api/report/route.ts     POST {id} -> flags a question; 3 flags hides it
+app/api/report/route.ts     POST {id} -> flags a question; 3 distinct reporters (hashed IP) hide it
 components/Game.tsx         Whole client UI: home, loading, play, done screens + Settings sheet
 lib/shared.ts               Types, ErrorCode union, ROUND_SIZE=10, REFILL_BELOW=20, topicSlug, cleanTopic
 lib/client-store.ts         localStorage: seen ids per topic+difficulty, best scores, player's Gemini key
 lib/server/db.ts            Lazy service-role Supabase client
 lib/server/gemini.ts        Prompt, Gemini call, zod validation, questionHash
 lib/server/http.ts          fail(), clientIp(), readJson(), envInt()
-supabase/migrations/        001_init.sql: tables + SQL functions; 002_grants.sql: explicit table grants
+supabase/migrations/        001_init.sql: tables + SQL functions; 002_grants.sql: explicit table grants;
+                            003_report_once.sql: one report per reporter per question
 scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches browser files
 ```
 
@@ -87,6 +88,8 @@ scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches brows
 - Never log request headers or anything that could contain `x-gemini-key`.
 - Never add a client-side Supabase client or ship the anon key to the browser. All DB access goes through API routes.
 - Anything under `lib/server/` must keep `import "server-only"`.
+- Security headers (CSP without nonces, frame-ancestors none, nosniff, etc.) live in `next.config.ts`. `connect-src` stays `'self'` so a player's saved key can't be sent elsewhere. Adding an external script, font or API means updating the CSP.
+- Custom topics are deliberately unfiltered beyond the prompt rule and Gemini's own safety. It's a fun app; don't add topic filters.
 - `npm run build` runs `scripts/check-secrets.mjs` as `postbuild`. It fails the build (locally and on Vercel) if a secret value or key pattern appears in any browser-facing file. Never weaken or skip it.
 
 ## Conventions
@@ -111,7 +114,7 @@ scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches brows
 
 ## Known gaps
 
-- One IP can submit 3 reports and hide a question on its own (30 reports/hour limit). An admin review page would fix this.
+- Someone with 3 different IPs can still hide a question. An admin review page would fix this.
 - The daily cap counts attempts, including failed Gemini calls.
 - Seen history is per-browser and lost if localStorage is cleared.
 - Two players starting the same new topic at the same moment can trigger two batches. Dedupe keeps the bank clean, but quota is used twice.
