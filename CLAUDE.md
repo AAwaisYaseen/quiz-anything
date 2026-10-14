@@ -109,7 +109,8 @@ scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches brows
 
 - Initial build is done. Build, lint and typecheck pass.
 - **Tested end-to-end against live Supabase + Gemini on 2026-10-14** (`gemini-3.5-flash-lite`): generation (~16-18s per batch of 20), dedupe/avoid list, daily cap, per-IP rate limit, bad player key, report-hide, and a full round in the UI at 375px in light and dark mode.
-- Not yet tested: a real player key end to end in the UI, and a Vercel deploy.
+- **Live on Vercel: https://quiz-anything-eight.vercel.app** (deploys from `main` on GitHub: AAwaisYaseen/quiz-anything). Verified live on 2026-10-14: security headers, generation (~8s per batch), a UI round, and no secrets in browser assets.
+- Not yet tested: a real player key end to end in the UI.
 - No automated tests yet.
 
 ## Known gaps
@@ -123,4 +124,4 @@ scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches brows
 
 ## Backlog ideas
 
-Timer mode, endless mode, admin page for reported questions, daily challenge (same 10 questions for everyone), and a "share score" card.
+Multiplayer room mode (next up), timer mode, endless mode, admin page for reported questions, daily challenge (same 10 questions for everyone), and a "share score" card.
