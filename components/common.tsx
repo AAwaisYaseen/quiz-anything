@@ -30,6 +30,13 @@ export const MESSAGES: Record<ErrorCode, string> = {
   OWN_KEY_QUOTA: "Your Gemini key hit its rate limit. Wait a minute and try again.",
   GEN_FAILED: "Couldn't write new questions right now. Try again.",
   SERVER_ERROR: "Couldn't reach the question bank. Check your connection and try again.",
+  BAD_NAME: "Add a nickname of up to 20 characters.",
+  ROOM_NOT_FOUND: "That room doesn't exist or has expired. Check the code, or create a new room.",
+  ROOM_FULL: "That room is full. Ask your friend for a new code.",
+  ROOM_STARTED: "That game has already started. Ask your friend to start a rematch, then join.",
+  NEED_PLAYERS: "Wait for your friend to join before starting.",
+  NOT_ENOUGH_QUESTIONS: "There aren't enough questions for this topic yet. Try again in a moment.",
+  TOO_LATE: "Time's up for that question.",
 };
 
 export async function postJson(url: string, body: unknown, headers: Record<string, string> = {}) {
