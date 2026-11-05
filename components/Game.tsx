@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { store } from "@/lib/client-store";
+import { LEVEL_LABEL, LoadingBar, MESSAGES, PRESETS, generate, postJson } from "@/components/common";
 import {
   DIFFICULTIES,
   REFILL_BELOW,
@@ -18,33 +19,6 @@ type HomeAction = "replay" | "settings";
 type HomeError = { text: string; actions?: HomeAction[] };
 type RoundResponse = { questions: Question[]; remaining: number; total: number };
 
-const PRESETS = [
-  "General knowledge",
-  "World geography",
-  "Capitals & flags",
-  "History",
-  "Science",
-  "Logic & IQ puzzles",
-  "Space",
-  "Countries & cultures",
-  "Words & languages",
-  "Sports",
-  "Inventions",
-  "Human body",
-];
-
-const LEVEL_LABEL: Record<Difficulty, string> = { easy: "Easy", medium: "Medium", hard: "Hard" };
-
-const MESSAGES: Record<ErrorCode, string> = {
-  BAD_REQUEST: "That topic didn't work. Use 2 to 80 characters.",
-  NEEDS_OWN_KEY: "Today's free allowance for new questions is used up. Add your own free Gemini key to keep going.",
-  RATE_LIMITED: "Too many new-question requests from your network. Try again in an hour.",
-  BAD_KEY: "Your Gemini key was rejected. Check it in Settings.",
-  OWN_KEY_QUOTA: "Your Gemini key hit its rate limit. Wait a minute and try again.",
-  GEN_FAILED: "Couldn't write new questions right now. Try again.",
-  SERVER_ERROR: "Couldn't reach the question bank. Check your connection and try again.",
-};
-
 function shuffleOptions(q: Question): Question {
   const order = [0, 1, 2, 3];
   for (let i = 3; i > 0; i--) {
@@ -54,20 +28,6 @@ function shuffleOptions(q: Question): Question {
   return { ...q, options: order.map((i) => q.options[i]), answer_index: order.indexOf(q.answer_index) };
 }
 
-async function postJson(url: string, body: unknown, headers: Record<string, string> = {}) {
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...headers },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json().catch(() => ({}));
-    return { ok: res.ok, data };
-  } catch {
-    return { ok: false, data: { error: "SERVER_ERROR" } };
-  }
-}
-
 async function fetchRound(topic: string, difficulty: Difficulty): Promise<RoundResponse | null> {
   const r = await postJson("/api/questions", {
     topic,
@@ -75,15 +35,6 @@ async function fetchRound(topic: string, difficulty: Difficulty): Promise<RoundR
     exclude: store.getSeen(topicSlug(topic), difficulty),
   });
   return r.ok ? (r.data as RoundResponse) : null;
-}
-
-/** Ask the server to write a new batch. Returns an error code, or null on success. */
-async function generate(topic: string, difficulty: Difficulty): Promise<ErrorCode | null> {
-  const key = store.getKey();
-  const r = await postJson("/api/generate", { topic, difficulty }, key ? { "x-gemini-key": key } : {});
-  if (r.ok) return null;
-  const code = (r.data as { error?: ErrorCode }).error;
-  return code && code in MESSAGES ? code : "GEN_FAILED";
 }
 
 export default function Game() {
@@ -432,48 +383,6 @@ export default function Game() {
 
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     </main>
-  );
-}
-
-const WRITING_STEPS = [
-  "Picking sub-topics",
-  "Writing questions",
-  "Adding tricky wrong answers",
-  "Checking the answers",
-  "Shuffling the options",
-];
-
-/**
- * There's no real progress signal from the server, so the bar eases toward a target and never
- * claims to be done early: up to 25% while searching the bank, then on toward 94% over the
- * ~17s it takes to write a batch.
- */
-function LoadingBar({ writing }: { writing: boolean }) {
-  const [pct, setPct] = useState(4);
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    const target = writing ? 94 : 25;
-    const rate = writing ? 0.012 : 0.1; // share of the remaining gap closed every 100ms
-    const id = setInterval(() => setPct((p) => p + (target - p) * rate), 100);
-    return () => clearInterval(id);
-  }, [writing]);
-
-  useEffect(() => {
-    if (!writing) return;
-    const id = setInterval(() => setStep((s) => Math.min(s + 1, WRITING_STEPS.length - 1)), 3500);
-    return () => clearInterval(id);
-  }, [writing]);
-
-  return (
-    <>
-      <div className="bar" role="progressbar" aria-label="Loading questions">
-        <div className="bar-fill" style={{ width: `${pct}%` }} />
-      </div>
-      <p className="load-step" aria-hidden>
-        {writing ? `${WRITING_STEPS[step]}…` : " "}
-      </p>
-    </>
   );
 }
 

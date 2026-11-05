@@ -38,7 +38,8 @@ npx tsc --noEmit
 app/api/questions/route.ts  POST {topic, difficulty, exclude[]} -> up to 10 unseen questions + remaining + total
 app/api/generate/route.ts   POST {topic, difficulty}, optional x-gemini-key header -> writes a batch of 20 to the bank
 app/api/report/route.ts     POST {id} -> flags a question; 3 distinct reporters (hashed IP) hide it
-components/Game.tsx         Whole client UI: home, loading, play, done screens + Settings sheet
+components/Game.tsx         Solo mode UI: home, loading, play, done screens + Settings sheet
+components/common.tsx       Shared client bits: PRESETS, LEVEL_LABEL, MESSAGES, postJson, generate, LoadingBar
 lib/shared.ts               Types, ErrorCode union, ROUND_SIZE=10, REFILL_BELOW=20, topicSlug, cleanTopic
 lib/client-store.ts         localStorage: seen ids per topic+difficulty, best scores, player's Gemini key
 lib/server/db.ts            Lazy service-role Supabase client
@@ -96,7 +97,7 @@ scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches brows
 
 ## Conventions
 
-- Adding an error case means extending `ErrorCode` in `lib/shared.ts` **and** adding a message in `MESSAGES` in `components/Game.tsx`.
+- Adding an error case means extending `ErrorCode` in `lib/shared.ts` **and** adding a message in `MESSAGES` in `components/common.tsx`.
 - Schema changes go in a **new** migration file (`002_...sql`). Never edit `001_init.sql` once it's been applied.
 - Keep the visual design: chunky bordered buttons with a hard offset shadow, mustard accent `#F2B705`, sea-green palette, Bricolage Grotesque. It's mobile-first, so test at 375px wide.
 - Respect `prefers-reduced-motion` and keep visible focus styles.
