@@ -2,6 +2,8 @@
 import type { Difficulty } from "@/lib/shared";
 
 const KEY_GEMINI = "qa:gemini-key";
+
+export type RoomSession = { code: string; token: string };
 const MAX_SEEN = 3000;
 
 function get<T>(k: string, fallback: T): T {
@@ -33,6 +35,30 @@ export const store = {
 
   getBest: (slug: string, d: Difficulty) => get<number>(bestKey(slug, d), 0),
   setBest: (slug: string, d: Difficulty, n: number) => set(bestKey(slug, d), n),
+
+  getName: () => get<string>("qa:name", ""),
+  setName: (n: string) => set("qa:name", n),
+
+  // The current friend room lives in sessionStorage: it survives a refresh, and each tab is its own
+  // player (handy for testing with two tabs).
+  getRoom(): RoomSession | null {
+    try {
+      const v = sessionStorage.getItem("qa:room");
+      return v ? (JSON.parse(v) as RoomSession) : null;
+    } catch {
+      return null;
+    }
+  },
+  setRoom(r: RoomSession) {
+    try {
+      sessionStorage.setItem("qa:room", JSON.stringify(r));
+    } catch {}
+  },
+  clearRoom() {
+    try {
+      sessionStorage.removeItem("qa:room");
+    } catch {}
+  },
 
   getKey: () => get<string>(KEY_GEMINI, ""),
   setKey: (k: string) => set(KEY_GEMINI, k),

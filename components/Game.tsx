@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { store } from "@/lib/client-store";
 import { LEVEL_LABEL, LoadingBar, MESSAGES, PRESETS, generate, postJson } from "@/components/common";
+import Room from "@/components/Room";
 import {
   DIFFICULTIES,
   REFILL_BELOW,
@@ -12,9 +13,10 @@ import {
   type Difficulty,
   type ErrorCode,
   type Question,
+  cleanRoomCode,
 } from "@/lib/shared";
 
-type Screen = "home" | "loading" | "play" | "done";
+type Screen = "home" | "loading" | "play" | "done" | "friends";
 type HomeAction = "replay" | "settings";
 type HomeError = { text: string; actions?: HomeAction[] };
 type RoundResponse = { questions: Question[]; remaining: number; total: number };
@@ -57,8 +59,20 @@ export default function Game() {
   const [summary, setSummary] = useState<{ best: number; newBest: boolean } | null>(null);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [roomCode, setRoomCode] = useState<string | null>(null);
   const genRunning = useRef(false);
   const errRef = useRef<HTMLDivElement>(null);
+
+  // An invite link (?room=CODE), or a room already open in this tab (after a refresh), opens friend mode.
+  useEffect(() => {
+    const code = cleanRoomCode(new URLSearchParams(window.location.search).get("room"));
+    const active = store.getRoom();
+    if (!code && !active) return;
+    queueMicrotask(() => {
+      setRoomCode(code);
+      setScreen("friends");
+    });
+  }, []);
 
   // On a phone the error sits below the fold, so bring it into view.
   useEffect(() => {
@@ -219,6 +233,15 @@ export default function Game() {
             </button>
           </div>
           <p className="sub">Pick a topic, answer 10 questions, repeat.</p>
+          <button
+            className="btn plain wide friends"
+            onClick={() => {
+              setRoomCode(null);
+              setScreen("friends");
+            }}
+          >
+            Play with a friend
+          </button>
 
           <h2>Difficulty</h2>
           <div className="levels" role="group" aria-label="Difficulty">
@@ -379,6 +402,18 @@ export default function Game() {
             ),
           )}
         </section>
+      )}
+
+      {screen === "friends" && (
+        <Room
+          key={roomCode ?? "menu"}
+          initialCode={roomCode}
+          onExit={() => {
+            setRoomCode(null);
+            setScreen("home");
+          }}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
       )}
 
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}

@@ -126,6 +126,49 @@ h2 { font-size: 1.05rem; font-weight: 600; margin: 22px 0 10px; }
 .miss p { font-weight: 600; margin-bottom: 6px; line-height: 1.35; }
 .miss span { color: var(--good); font-weight: 600; }
 
+/* friend rooms */
+.btn.friends { margin: -8px 0 4px; }
+.btn:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: 0 4px 0 var(--edge); }
+.hint { color: var(--muted); font-weight: 600; font-size: 0.95rem; margin: 14px 0 10px; }
+.gap-top { margin-top: 14px; }
+.code-input { text-transform: uppercase; letter-spacing: 0.2em; font-weight: 800; }
+.room-code {
+  font-size: 3.2rem; font-weight: 800; letter-spacing: 0.14em; line-height: 1; text-align: center;
+  background: var(--tile); border: 2px solid var(--edge); border-radius: 18px; box-shadow: 0 4px 0 var(--edge);
+  padding: 18px 8px; margin-bottom: 14px; font-variant-numeric: tabular-nums;
+}
+.players { list-style: none; display: grid; gap: 8px; }
+.players li {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  background: var(--surface); border: 2px solid var(--edge); border-radius: 14px; padding: 12px 14px; font-weight: 600;
+}
+.players li em { color: var(--muted); font-style: normal; }
+.players li small, .score small { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.players li.empty { border-style: dashed; color: var(--muted); background: none; }
+.scores { display: flex; gap: 10px; margin-bottom: 16px; }
+.score {
+  flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  background: var(--surface); border: 2px solid var(--edge); border-radius: 14px; padding: 10px 14px; box-shadow: 0 3px 0 var(--edge);
+}
+.score span { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.score b { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.score.me { background: var(--accent); color: var(--accent-ink); }
+.score.me small { color: var(--accent-ink); }
+.big-title { font-size: 2.6rem; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; margin: 14px 0 16px; }
+.ready { text-align: center; padding-top: 18vh; }
+.ready-count { font-size: 6rem; font-weight: 800; line-height: 1; }
+.meta .hurry { color: var(--bad); }
+.meta span:last-child { margin-left: auto; font-variant-numeric: tabular-nums; }
+.timer { height: 12px; border-radius: 999px; overflow: hidden; border: 2px solid var(--edge); background: var(--tile); margin-bottom: 20px; }
+.timer-fill { height: 100%; background: var(--good); transition: width 0.1s linear; }
+.timer-fill.low { background: var(--bad); }
+.opt.picked { background: var(--accent); color: var(--accent-ink); }
+.opt.picked b { background: var(--tile); }
+.opt .tags { margin-left: auto; flex: none; font-style: normal; font-size: 0.8rem; font-weight: 800; background: var(--surface); border: 2px solid var(--edge); border-radius: 999px; padding: 2px 9px; }
+.fb.quiet { animation: none; background: none; border-style: dashed; }
+.miss small { display: block; margin-top: 6px; color: var(--muted); font-weight: 600; }
+.miss small.won { color: var(--good); }
+
 /* settings sheet */
 .overlay { position: fixed; inset: 0; background: var(--overlay); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
 .sheet {

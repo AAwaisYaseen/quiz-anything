@@ -29,7 +29,7 @@ The owner is an experienced Next.js / React Native developer. Skip basics, give 
 npm run dev     # localhost:3000
 npm run build   # must pass before committing
 npm run lint
-npx tsc --noEmit
+npx tsc --noEmit  # run `npx next typegen` first on a fresh checkout (route types)
 ```
 
 ## Architecture
@@ -38,15 +38,19 @@ npx tsc --noEmit
 app/api/questions/route.ts  POST {topic, difficulty, exclude[]} -> up to 10 unseen questions + remaining + total
 app/api/generate/route.ts   POST {topic, difficulty}, optional x-gemini-key header -> writes a batch of 20 to the bank
 app/api/report/route.ts     POST {id} -> flags a question; 3 distinct reporters (hashed IP) hide it
-components/Game.tsx         Solo mode UI: home, loading, play, done screens + Settings sheet
+app/api/room/[action]/route.ts  POST create|join|state|start|answer|rematch for friend rooms
+components/Game.tsx         Solo mode UI: home, loading, play, done screens + Settings sheet; hosts <Room>
+components/Room.tsx         Friend rooms UI: menu (join/create), lobby, synced play with timer, results
 components/common.tsx       Shared client bits: PRESETS, LEVEL_LABEL, MESSAGES, postJson, generate, LoadingBar
 lib/shared.ts               Types, ErrorCode union, ROUND_SIZE=10, REFILL_BELOW=20, topicSlug, cleanTopic
-lib/client-store.ts         localStorage: seen ids per topic+difficulty, best scores, player's Gemini key
+lib/client-store.ts         localStorage: seen ids, best scores, Gemini key, nickname; sessionStorage: current room
+lib/server/rooms.ts         Room codes, player tokens (sha256-hashed before storage)
 lib/server/db.ts            Lazy service-role Supabase client
 lib/server/gemini.ts        Prompt, Gemini call, zod validation, questionHash
 lib/server/http.ts          fail(), clientIp(), readJson(), envInt()
 supabase/migrations/        001_init.sql: tables + SQL functions; 002_grants.sql: explicit table grants;
-                            003_report_once.sql: one report per reporter per question
+                            003_report_once.sql: one report per reporter per question;
+                            004_rooms.sql: friend rooms + server-side game clock (room_* functions)
 scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches browser files
 ```
 
@@ -57,6 +61,17 @@ scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches brows
 3. When fewer than 20 unseen questions remain after serving a round, it fires `/api/generate` in the background (one at a time, guarded by a ref).
 4. Options are shuffled client-side, and `answer_index` is remapped to match.
 5. A question is marked seen when it's answered, not when it's served.
+
+### Friend rooms (`004_rooms.sql`, `components/Room.tsx`)
+
+- Host picks nickname, topic, difficulty -> `create` returns a 6-char code + a secret token (only its sha256 is stored). If the bank has < 10 questions, the client calls `/api/generate` before showing the lobby.
+- Friend joins by code or invite link `/?room=CODE`. Max 2 players for now (`ROOM_MAX_PLAYERS`); the schema supports N.
+- Any player can start once the room is full. `room_start` snapshots 10 questions with options shuffled in SQL (prefers questions the room hasn't played).
+- **The server owns the clock**: `room_tick` advances ready (3s) -> question (15s) -> reveal (4s) using `phase_ends_at`, and closes a question early once everyone has answered. Every `state`/`answer` call ticks first.
+- **Scoring: only the fastest correct answer gets the point** (earliest `answered_at`). One try per question.
+- `answer_index` and other players' choices are never sent while a question is open.
+- Clients poll `state` (~1s, faster near a phase end, 4s when hidden) and correct for clock skew using the server's `now`. No Supabase Realtime: that would need a key in the browser.
+- Rooms are deleted 6 hours after creation (on the next `room_create`).
 
 ### `/api/generate` order of checks
 
@@ -113,6 +128,7 @@ scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches brows
 - Initial build is done. Build, lint and typecheck pass.
 - **Tested end-to-end against live Supabase + Gemini on 2026-10-14** (`gemini-3.5-flash-lite`): generation (~16-18s per batch of 20), dedupe/avoid list, daily cap, per-IP rate limit, bad player key, report-hide, and a full round in the UI at 375px in light and dark mode.
 - **Live on Vercel: https://quiz-anything-eight.vercel.app** (deploys from `main` on GitHub: AAwaisYaseen/quiz-anything). Verified live on 2026-10-14: security headers, generation (~8s per batch), a UI round, and no secrets in browser assets.
+- Friend rooms built on 2026-11-05 (branch `multiplayer`): 34 API checks against live Supabase (lobby, start, one try, hidden answers, early reveal, fastest-correct scoring, 15s deadline, results, rematch with fresh questions) and a full two-tab playthrough at 375px. Not yet tested on two real phones.
 - Not yet tested: a real player key end to end in the UI.
 - No automated tests yet.
 
@@ -127,4 +143,4 @@ scripts/check-secrets.mjs   postbuild: fails the build if a secret reaches brows
 
 ## Backlog ideas
 
-Multiplayer room mode (next up), timer mode, endless mode, admin page for reported questions, daily challenge (same 10 questions for everyone), and a "share score" card.
+Host-chosen timer and 3+ player rooms, timer mode for solo, endless mode, admin page for reported questions, daily challenge (same 10 questions for everyone), and a "share score" card.
